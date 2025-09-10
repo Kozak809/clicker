@@ -1,0 +1,1018 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Super Clicker</title>
+  <style>
+    :root{
+      --pink:#ff6aa5;
+      --pink-2:#ff8fc0;
+      --bg:#ffe8f1;
+      --bg-2:#fff4f8;
+      --text:#2b2430;
+      --lime:#c7ffce;
+      --shadow: 0 8px 30px rgba(255,106,165,.35);
+      --neon: 0 0 8px rgba(255,106,165,.8), 0 0 18px rgba(255,106,165,.5);
+      --radius: 18px;
+    }
+    html,body{height:100%}
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: 
+        radial-gradient(circle at 20% 80%, rgba(255,106,165,0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255,143,192,0.15) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(199,255,206,0.1) 0%, transparent 50%),
+        radial-gradient(1200px 600px at 50% -10%, var(--bg-2), transparent), 
+        var(--bg);
+      color:var(--text);
+      -webkit-tap-highlight-color: transparent;
+      overflow:hidden;
+      animation: backgroundShift 20s ease-in-out infinite;
+    }
+    
+    @keyframes backgroundShift {
+      0%, 100% {
+        background: 
+          radial-gradient(circle at 20% 80%, rgba(255,106,165,0.15) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(255,143,192,0.15) 0%, transparent 50%),
+          radial-gradient(circle at 40% 40%, rgba(199,255,206,0.1) 0%, transparent 50%),
+          radial-gradient(1200px 600px at 50% -10%, var(--bg-2), transparent), 
+          var(--bg);
+      }
+      25% {
+        background: 
+          radial-gradient(circle at 60% 30%, rgba(255,106,165,0.15) 0%, transparent 50%),
+          radial-gradient(circle at 30% 70%, rgba(255,143,192,0.15) 0%, transparent 50%),
+          radial-gradient(circle at 80% 80%, rgba(199,255,206,0.1) 0%, transparent 50%),
+          radial-gradient(1200px 600px at 50% -10%, var(--bg-2), transparent), 
+          var(--bg);
+      }
+      50% {
+        background: 
+          radial-gradient(circle at 80% 60%, rgba(255,106,165,0.15) 0%, transparent 50%),
+          radial-gradient(circle at 20% 40%, rgba(255,143,192,0.15) 0%, transparent 50%),
+          radial-gradient(circle at 60% 20%, rgba(199,255,206,0.1) 0%, transparent 50%),
+          radial-gradient(1200px 600px at 50% -10%, var(--bg-2), transparent), 
+          var(--bg);
+      }
+      75% {
+        background: 
+          radial-gradient(circle at 40% 90%, rgba(255,106,165,0.15) 0%, transparent 50%),
+          radial-gradient(circle at 90% 50%, rgba(255,143,192,0.15) 0%, transparent 50%),
+          radial-gradient(circle at 10% 60%, rgba(199,255,206,0.1) 0%, transparent 50%),
+          radial-gradient(1200px 600px at 50% -10%, var(--bg-2), transparent), 
+          var(--bg);
+      }
+    }
+    /* Layout */
+    .app{height:100%; display:grid; grid-template-rows: auto 1fr auto; max-width:430px; margin:0 auto; box-sizing:border-box}
+    header{padding:14px 16px 8px; position:relative}
+    header .title{font-weight:800; font-size:20px; letter-spacing:.3px; color:var(--pink); text-shadow:var(--neon); animation: titleGlow 4s ease-in-out infinite alternate}
+    header .currency{position:absolute; right:16px; top:12px; background: white; padding:6px 10px; border-radius:999px; box-shadow:var(--shadow); display:flex; gap:8px; align-items:center}
+    header .currency img{width:18px; height:18px}
+    header .subtitle{font-size:12px; opacity:.7; margin-top:2px}
+
+    main{position:relative; overflow:hidden}
+    .panel{position:absolute; inset:0; padding:12px 16px 88px; overflow:auto; -webkit-overflow-scrolling:touch;
+      transform:translateX(100%); opacity:0; transition:.35s transform cubic-bezier(.22,.8,.34,1), .25s opacity ease}
+    .panel.active{transform:translateX(0); opacity:1}
+    .panel.exit-left{transform:translateX(-20%); opacity:0}
+
+    /* Game panel */
+    .game-wrap{display:flex; flex-direction:column; align-items:center; gap:12px}
+    .status-row{display:flex; gap:8px; justify-content:center}
+    .status-chip{background: white; padding:6px 10px; border-radius:999px; box-shadow:var(--shadow); font-weight:600; font-size:13px}
+    #clickBtn{
+      width:min(78vw, 320px); height:min(78vw,320px); max-height:56vh;
+      border-radius:50%; border:none; outline:none; cursor:pointer; position:relative;
+      background: radial-gradient(circle at 35% 30%, #ffd1e3, #ff9dc3 60%, #ff6aa5 100%);
+      box-shadow: 0 18px 30px rgba(255,106,165,.35), inset 0 8px 18px rgba(255,255,255,.7);
+      transition: transform .08s ease; display:grid; place-items:center;
+      animation: buttonPulse 3s ease-in-out infinite;
+      user-select:none;
+    }
+    #clickBtn:active{transform:scale(.96)}
+    #clickBtn .sprite{position:absolute; inset:10%; background-size:contain; background-repeat:no-repeat; background-position:center; filter: drop-shadow(0 8px 10px rgba(0,0,0,.12)); transition: .25s transform ease}
+    #clickBtn.pressed .sprite{transform:scale(.95)}
+    #clickBtn .cpc{position:absolute; bottom:10%; left:50%; transform:translateX(-50%); background:rgba(255,255,255,.9); padding:6px 10px; border-radius:999px; font-weight:700; box-shadow:var(--shadow); font-size:13px}
+
+    .float{position:absolute; pointer-events:none; will-change: transform, opacity; font-weight:800; color:#ff3f8a; text-shadow: var(--neon)}
+    @keyframes floatUp{0%{opacity:0; transform:translate(-50%, 10px) scale(.9)} 15%{opacity:1} 85%{opacity:1} 100%{opacity:0; transform:translate(-50%,-50px) scale(1.1)}}
+    
+    @keyframes buttonPulse {
+      0%, 100% {
+        box-shadow: 0 18px 30px rgba(255,106,165,.35), inset 0 8px 18px rgba(255,255,255,.7);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 20px 35px rgba(255,106,165,.45), inset 0 8px 18px rgba(255,255,255,.8);
+        transform: scale(1.02);
+      }
+    }
+    
+    @keyframes titleGlow {
+      0% {
+        text-shadow: var(--neon);
+      }
+      100% {
+        text-shadow: 0 0 12px rgba(255,106,165,1), 0 0 24px rgba(255,106,165,.7), var(--neon);
+      }
+    }
+    
+    /* Falling button images */
+    .falling-button {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      pointer-events: none;
+      z-index: 10;
+      border-radius: 50%;
+      animation: fallDown 3s linear forwards;
+      opacity: 0.8;
+    }
+    
+    @keyframes fallDown {
+      0% {
+        transform: translateY(-50px) rotate(0deg);
+        opacity: 0.8;
+      }
+      100% {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* Results overlay */
+    .results{position:absolute; inset:0; background: linear-gradient(180deg, rgba(255,244,248,.9), rgba(255,232,241,.95)); display:none; align-items:center; justify-content:center; padding:20px}
+    .results.show{display:flex}
+    .card{width:100%; max-width:360px; background:white; border-radius: var(--radius); box-shadow:var(--shadow); padding:16px}
+    .card h3{margin:4px 0 10px; color:var(--pink)}
+    .card .big{font-size:28px; font-weight:900}
+    .card .row{display:flex; justify-content:space-between; margin:10px 0}
+    .card .cta{margin-top:12px; display:flex; gap:8px}
+    .btn{appearance:none; border:none; border-radius:14px; padding:12px 14px; font-weight:800; cursor:pointer; background:linear-gradient(180deg, var(--pink-2), var(--pink)); color:white; box-shadow:var(--shadow)}
+    .btn.ghost{background:white; color:var(--pink); border:2px solid var(--pink)}
+
+    /* Upgrades */
+    .grid{display:grid; grid-template-columns:1fr; gap:12px}
+    .upgrade{background:white; border-radius:var(--radius); padding:12px; box-shadow:var(--shadow); display:flex; gap:12px; align-items:center}
+    .upgrade .icon{width:40px; height:40px; background-size:contain; background-repeat:no-repeat; background-position:center; flex-shrink:0}
+    .upgrade .meta{flex:1; min-width:0}
+    .upgrade h4{margin:0 0 4px; font-size:14px; font-weight:700}
+    .upgrade .desc{font-size:12px; opacity:.7; margin-bottom:6px}
+    .upgrade .price{font-size:13px; font-weight:800; color:var(--pink)}
+    .upgrade .btn{margin-left:auto; flex-shrink:0}
+
+    /* Settings */
+    .settings-container{display:flex; flex-direction:column; gap:24px}
+    .settings-section{background:white; border-radius:var(--radius); padding:16px; box-shadow:var(--shadow)}
+    .settings-section h4{margin:0 0 12px; font-size:16px; font-weight:700; display:flex; align-items:center; gap:8px}
+    .settings-section.danger-zone{background:linear-gradient(135deg, #fff5f5, #fff)}
+    .settings-section.danger-zone h4{color:#d63384}
+    
+    .prestige-btn, .reset-btn{width:100%; padding:12px 16px; display:flex; align-items:center; justify-content:center}
+    .btn-content{display:flex; flex-direction:column; align-items:center; gap:2px}
+    .btn-title{font-weight:700; font-size:14px}
+    .btn-subtitle{font-size:12px; opacity:0.8; font-weight:500}
+    
+    .prestige-btn{background:linear-gradient(135deg, var(--pink), var(--pink-2)); color:white}
+    .prestige-btn:hover{background:linear-gradient(135deg, #ff5a95, var(--pink))}
+    .reset-btn{background:linear-gradient(135deg, #dc3545, #e85d75); color:white}
+    .reset-btn:hover{background:linear-gradient(135deg, #c82333, #dc3545)}
+
+    .hint{font-size:12px; opacity:.7; text-align:center; margin:6px 0 2px}
+
+    /* Leaderboard */
+    .lb{background:white; border-radius:16px; padding:6px; box-shadow:var(--shadow)}
+    table{width:100%; border-collapse:separate; border-spacing:0 8px}
+    tr{transition: transform .35s cubic-bezier(.2,.8,.2,1), background-color .3s}
+    tr.me{background: linear-gradient(90deg, rgba(255,106,165,.1), transparent)}
+    td{background: #fff; padding:10px; border-radius:10px}
+    td:first-child{width:44px}
+    .avatar{width:32px; height:32px; border-radius:50%; object-fit:cover; box-shadow:0 2px 4px rgba(0,0,0,.15)}
+    .ascend{animation: ascendGlow 1.2s ease}
+    @keyframes ascendGlow{0%{box-shadow:0 0 0 rgba(255,106,165,0)} 30%{box-shadow:0 0 16px rgba(255,106,165,.7)} 100%{box-shadow:0 0 0 rgba(255,106,165,0)}}
+
+    /* Settings */
+    .seg{display:flex; background:white; padding:6px; border-radius:12px; box-shadow:var(--shadow); gap:6px; width:max-content}
+    .seg button{border:none; padding:8px 12px; border-radius:10px; background:transparent; font-weight:800; cursor:pointer}
+    .seg button.active{background:var(--bg-2); color:var(--pink); text-shadow: var(--neon)}
+
+    .danger{background:#fff0f4; border:2px dashed #ff9dc3; color:#b01259}
+
+    /* Bottom nav */
+    nav{position:relative; height:68px; background:rgba(255,255,255,.9); backdrop-filter: blur(8px); border-top-left-radius:16px; border-top-right-radius:16px; display:grid; grid-template-columns:repeat(4,1fr); align-items:center; box-shadow: 0 -8px 24px rgba(255,106,165,.18)}
+    nav .tab{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#8a6f7a; cursor:pointer; height:100%}
+    nav .tab.active{color:var(--pink)}
+    nav .tab .ico{width:22px; height:22px; background: radial-gradient(circle at 40% 30%, #ffd1e3, #ff9dc3); border-radius:6px; box-shadow: inset 0 6px 10px rgba(255,255,255,.7); background-size:14px; background-repeat:no-repeat; background-position:center}
+    nav .tab span{font-size:11px; font-weight:700}
+
+    /* First-time setup modal */
+    .setup-overlay{position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; z-index:1000; backdrop-filter:blur(4px)}
+    .setup-modal{background:white; border-radius:var(--radius); box-shadow:var(--shadow); padding:24px; max-width:400px; width:90%; margin:20px}
+    .setup-modal h2{margin:0 0 16px; color:var(--pink); text-align:center}
+    .setup-form{display:flex; flex-direction:column; gap:16px}
+    .input-group{display:flex; flex-direction:column; gap:8px}
+    .input-group label{font-weight:600; color:var(--text)}
+    .input-group input{padding:12px; border:2px solid #e0e0e0; border-radius:12px; font-size:16px; transition:.3s border-color}
+    .input-group input:focus{outline:none; border-color:var(--pink)}
+    .avatar-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+    .avatar-option{width:64px; height:64px; border:3px solid transparent; border-radius:50%; cursor:pointer; transition:.3s all; background:white; box-shadow:0 2px 8px rgba(0,0,0,.1)}
+    .avatar-option:hover{transform:scale(1.05); box-shadow:0 4px 12px rgba(0,0,0,.15)}
+    .avatar-option.selected{border-color:var(--pink); box-shadow:var(--shadow)}
+    .avatar-option img{width:100%; height:100%; border-radius:50%; object-fit:cover}
+    .setup-btn{background:linear-gradient(180deg, var(--pink-2), var(--pink)); color:white; border:none; padding:14px 20px; border-radius:12px; font-weight:800; cursor:pointer; font-size:16px; transition:.3s transform}
+    .setup-btn:hover{transform:translateY(-2px)}
+    .setup-btn:disabled{opacity:.5; cursor:not-allowed; transform:none}
+
+    /* User profile in header */
+    .user-profile{position:absolute; left:16px; top:12px; display:flex; align-items:center; gap:8px; background:white; padding:6px 10px; border-radius:999px; box-shadow:var(--shadow)}
+    .user-avatar{width:24px; height:24px; border-radius:50%; object-fit:cover}
+    .user-name{font-weight:600; font-size:13px; color:var(--text)}
+
+    /* Confirmation modal */
+    .confirm-overlay{position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; z-index:1000; backdrop-filter:blur(4px); opacity:0; visibility:hidden; transition:.3s all}
+    .confirm-overlay.show{opacity:1; visibility:visible}
+    .confirm-modal{background:white; border-radius:var(--radius); box-shadow:var(--shadow); padding:24px; max-width:400px; width:90%; margin:20px; transform:scale(.9); transition:.3s transform}
+    .confirm-overlay.show .confirm-modal{transform:scale(1)}
+    .confirm-modal h3{margin:0 0 16px; color:var(--pink); text-align:center; font-size:20px}
+    .confirm-modal .message{color:var(--text); margin:0 0 24px; line-height:1.5; white-space:pre-line}
+    .confirm-buttons{display:flex; gap:12px}
+    .confirm-btn{flex:1; padding:12px 16px; border:none; border-radius:12px; font-weight:700; cursor:pointer; font-size:14px; transition:.3s all}
+    .confirm-btn.cancel{background:#f0f0f0; color:var(--text)}
+    .confirm-btn.cancel:hover{background:#e0e0e0}
+    .confirm-btn.confirm{background:linear-gradient(180deg, var(--pink-2), var(--pink)); color:white}
+    .confirm-btn.confirm:hover{transform:translateY(-2px)}
+    .confirm-btn.danger{background:linear-gradient(180deg, #ff6b6b, #ff4757); color:white}
+    .confirm-btn.danger:hover{transform:translateY(-2px)}
+
+    /* Start Screen */
+    .start-screen{display:flex; align-items:center; justify-content:center; height:100%; padding:20px}
+    .start-content{text-align:center; max-width:400px; width:100%}
+    .start-title{font-size:48px; font-weight:900; color:var(--pink); text-shadow:var(--neon); margin:0 0 16px; line-height:1.1}
+    .start-subtitle{font-size:18px; color:var(--text); opacity:.8; margin:0 0 40px; font-weight:500}
+    .mega-start-btn{
+      position:relative; width:100%; min-height:120px; border:none; border-radius:24px; 
+      background:linear-gradient(135deg, var(--pink-2), var(--pink), #ff4d8a); 
+      color:white; font-size:28px; font-weight:900; cursor:pointer; overflow:hidden;
+      box-shadow:var(--shadow), 0 12px 40px rgba(255,106,165,.4);
+      transition:.3s all cubic-bezier(.2,.8,.2,1);
+    }
+    .mega-start-btn:hover{transform:translateY(-4px) scale(1.02); box-shadow:var(--shadow), 0 20px 60px rgba(255,106,165,.5)}
+    .mega-start-btn:active{transform:translateY(-2px) scale(1.01)}
+    .mega-start-btn .btn-text{position:relative; z-index:2; display:block; padding:20px}
+    .mega-start-btn .btn-glow{
+      position:absolute; inset:0; background:linear-gradient(45deg, transparent, rgba(255,255,255,.3), transparent);
+      transform:translateX(-100%); transition:.6s transform ease;
+    }
+    .mega-start-btn:hover .btn-glow{transform:translateX(100%)}
+
+    /* Utility */
+    .sr{position:absolute; clip:rect(0 0 0 0); clip-path: inset(50%); height:1px; width:1px; overflow:hidden; white-space:nowrap}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="user-profile" id="userProfile" style="display:none">
+      <img class="user-avatar" id="userAvatar" src="" alt="">
+      <span class="user-name" id="userName"></span>
+    </div>
+    <div class="subtitle" id="subtitle">v1.1</div>
+    <div class="currency" id="bankDisplay"><img id="bankIcon" alt="" src="assets/icons/candy.png"/><span id="bankText">0</span></div>
+  </header>
+
+  <main>
+    <!-- GAME PANEL -->
+    <section class="panel active" id="panel-game" role="region" aria-labelledby="tab-game">
+      <!-- Start Screen -->
+      <div class="start-screen" id="startScreen">
+        <div class="start-content">
+          <h1 class="start-title">🍬 Super Clicker</h1>
+          <p class="start-subtitle">Нажимай и зарабатывай конфеты!</p>
+          <button class="mega-start-btn" id="megaStartBtn">
+            <span class="btn-text"><span data-i18n="start">Начать игру</span></span>
+            <div class="btn-glow"></div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Game Screen -->
+      <div class="game-wrap" id="gameScreen" style="display:none">
+        <div class="status-row">
+          <div class="status-chip">⏱️ <span data-i18n="time">Time</span>: <span id="timeLeft">30</span>s</div>
+          <div class="status-chip">🍬 <span data-i18n="earned">Earned</span>: <span id="roundEarned">0</span></div>
+        </div>
+
+        <button id="clickBtn" aria-label="Click" disabled>
+          <div class="sprite" id="btnSprite" style="background-image:url('assets/buttons/but1.png')"></div>
+        </button>
+
+        <div class="hint" id="roundTimeHint">30s round</div>
+      </div>
+
+      <div class="results" id="results">
+        <div class="card">
+          <h3 id="resultsTitle" data-i18n="roundOver">Round Over</h3>
+          <div class="row"><div>🍬 <span data-i18n="earned">Earned</span>:</div><div class="big" id="earnedThisRound">0</div></div>
+          <div class="row"><div>🏆 <span data-i18n="best">Best</span>:</div><div id="bestScore">0</div></div>
+          <div class="cta">
+            <button class="btn" id="toUpgrades"><span data-i18n="upgrades">Upgrades</span></button>
+            <button class="btn ghost" id="playAgain"><span data-i18n="start">Start</span></button>
+          </div>
+          <div class="hint" id="ascendMsg">↑ Leaderboard ascent!</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- UPGRADES PANEL -->
+    <section class="panel" id="panel-upgrades" role="region" aria-labelledby="tab-upgrades">
+      <div class="hint" id="timeIndicator">⏱️ <span data-i18n="roundTime">Round time</span>: 30s</div>
+      <div class="grid" id="upgradesGrid"></div>
+      <div class="hint">💡 <span data-i18n="tip">Tip</span>: <span data-i18n="tipText">big pink button changes sprite as you earn more within a round (100 / 1k / 10k / …)</span>.</div>
+    </section>
+
+    <!-- LEADERBOARD PANEL -->
+    <section class="panel" id="panel-leaders" role="region" aria-labelledby="tab-leaders">
+      <div class="lb">
+        <table id="lbTable"><tbody></tbody></table>
+      </div>
+    </section>
+
+    <!-- SETTINGS PANEL -->
+    <section class="panel" id="panel-settings" role="region" aria-labelledby="tab-settings">
+      <div class="settings-container">
+        <div class="settings-section">
+          <h4>🌐 <span data-i18n="language">Language</span></h4>
+          <div class="seg" role="tablist" aria-label="Language">
+            <button id="lang-en" class="active" data-lang="en" role="tab">🇺🇸 EN</button>
+            <button id="lang-ru" data-lang="ru" role="tab">🇷🇺 RU</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h4>⭐ <span data-i18n="prestige">Prestige</span></h4>
+          <button class="btn prestige-btn" id="prestigeBtn">
+            <div class="btn-content">
+              <span class="btn-title">⭐ <span data-i18n="prestige">Prestige</span></span>
+              <span class="btn-subtitle">+10% <span data-i18n="click">Click</span></span>
+            </div>
+          </button>
+          <div class="hint" id="prestigeHint">Reach 5,000 best to unlock.</div>
+        </div>
+
+        <div class="settings-section danger-zone">
+          <h4>⚠️ <span data-i18n="dangerZone">Danger Zone</span></h4>
+          <button class="btn danger reset-btn" id="resetBtn">
+            <div class="btn-content">
+              <span class="btn-title">🗑️ <span data-i18n="resetData">Reset Data</span></span>
+              <span class="btn-subtitle"><span data-i18n="resetWarning">This will delete all progress</span></span>
+            </div>
+          </button>
+          <div class="hint"><span data-i18n="resetKeeps">Keeps: best score, language, prestige bonus</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav>
+    <div class="tab active" data-tab="game" id="tab-game"><div class="ico" style="background-image:url('assets/icons/game.svg')"></div><span data-i18n="start">Start</span></div>
+    <div class="tab" data-tab="upgrades" id="tab-upgrades"><div class="ico" style="background-image:url('assets/icons/upgrades.svg')"></div><span data-i18n="upgrades">Upgrades</span></div>
+    <div class="tab" data-tab="leaders" id="tab-leaders"><div class="ico" style="background-image:url('assets/icons/leaderboard.svg')"></div><span data-i18n="leaders">Leaderboard</span></div>
+    <div class="tab" data-tab="settings" id="tab-settings"><div class="ico" style="background-image:url('assets/icons/settings.svg')"></div><span data-i18n="settings">Settings</span></div>
+  </nav>
+</div>
+
+<!-- First-time setup modal -->
+<div class="setup-overlay" id="setupOverlay" style="display:none">
+  <div class="setup-modal">
+    <h2 data-i18n="welcome">Добро пожаловать!</h2>
+    <div class="setup-form">
+      <div class="input-group">
+        <label for="playerName" data-i18n="enterName">Введите ваше имя:</label>
+        <input type="text" id="playerName" placeholder="Ваше имя" maxlength="20">
+      </div>
+      <div class="input-group">
+        <label data-i18n="chooseAvatar">Выберите аватар:</label>
+        <div class="avatar-grid" id="avatarGrid"></div>
+      </div>
+      <button class="setup-btn" id="startGameBtn" disabled data-i18n="startGame">Начать игру</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation modal -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-modal">
+    <h3 id="confirmTitle">Подтверждение</h3>
+    <div class="message" id="confirmMessage"></div>
+    <div class="confirm-buttons">
+      <button class="confirm-btn cancel" id="confirmCancel">Отмена</button>
+      <button class="confirm-btn confirm" id="confirmOk">Подтвердить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ======= Config (exposed variables) ======= */
+  const CONFIG = {
+    gameTitle: 'Super Clicker',
+    currency: { name: 'Candy', iconPath: 'assets/icons/candy.png' },
+    levelRewardIcons: ['assets/icons/star1.png','assets/icons/star2.png','assets/icons/star3.png'],
+    buttonSpritePath: (n)=>`assets/buttons/but${n}.png`, // n: 1..N
+    buttonSpriteMaxN: 8,
+    thresholds: [100, 1000, 10000, 100000, 1000000], // orders of magnitude
+    avatars: [
+      'assets/avatars/avatar1.png',
+      'assets/avatars/avatar2.png', 
+      'assets/avatars/avatar3.png',
+      'assets/avatars/avatar4.png',
+      'assets/avatars/avatar5.png',
+      'assets/avatars/avatar6.png'
+    ]
+  };
+
+  /* ======= Leaders ======= */
+  let LEADERS = [
+    {
+      "name": "Luna",
+      "score": 5000,
+      "avatar": "assets/avatars/avatar1.png"
+    },
+    {
+      "name": "PopCandy", 
+      "score": 2200,
+      "avatar": "assets/avatars/avatar2.png"
+    },
+    {
+      "name": "Marsh",
+      "score": 800,
+      "avatar": "assets/avatars/avatar3.png"
+    },
+    {
+      "name": "Marsh",
+      "score": 8000,
+      "avatar": "assets/avatars/avatar3.png"
+    },
+    {
+      "name": "LilyPad",
+      "score": 10000,
+      "avatar": "assets/avatars/avatar4.png"
+    }
+  ];
+  
+  // Load leaders (now just a placeholder since data is embedded)
+  async function loadLeaders() {
+    console.log('Leaders loaded from embedded data:', LEADERS);
+  }
+
+  /* ======= i18n ======= */
+  const I18N = { 
+    ru: { title: "Супер Кликер", start:"Старт", time:"Время", earned:"Заработано", upgrades:"Улучшения", leaders:"Лидеры", settings:"Настройки", prestige:"Престиж", addSecond:"+1 сек к раунду", welcome:"Добро пожаловать!", enterName:"Введите ваше имя:", chooseAvatar:"Выберите аватар:", startGame:"Начать игру", autoClicker:"Автокликер 1/с", autoClickerDesc:"Автоматически кликает раз в секунду", click:"Клик", language:"Язык", dangerZone:"Опасная зона", resetData:"Сбросить данные", resetWarning:"Это удалит весь прогресс", resetKeeps:"Сохранится: лучший счёт, язык, бонус престижа", confirm:"Подтвердить", cancel:"Отмена", confirmation:"Подтверждение", roundOver:"Раунд окончен", best:"Лучший", roundTime:"Время раунда", tip:"Совет", tipText:"большая розовая кнопка меняет спрайт по мере заработка в раунде (100 / 1к / 10к / …)", prestigeReady:"Престиж готов!", prestigeUnlock:"Достигните 5,000 лучший результат для разблокировки", round:"раунд"},
+    en: { title: "Super Clicker", start:"Start", time:"Time", earned:"Earned", upgrades:"Upgrades", leaders:"Leaderboard", settings:"Settings", prestige:"Prestige", addSecond:"+1s to round", welcome:"Welcome!", enterName:"Enter your name:", chooseAvatar:"Choose an avatar:", startGame:"Start Game", autoClicker:"Auto-clicker 1/s", autoClickerDesc:"Automatically clicks once per second", click:"Click", language:"Language", dangerZone:"Danger Zone", resetData:"Reset Data", resetWarning:"This will delete all progress", resetKeeps:"Keeps: best score, language, prestige bonus", confirm:"Confirm", cancel:"Cancel", confirmation:"Confirmation", roundOver:"Round Over", best:"Best", roundTime:"Round time", tip:"Tip", tipText:"big pink button changes sprite as you earn more within a round (100 / 1k / 10k / …)", prestigeReady:"Prestige ready!", prestigeUnlock:"Reach 5,000 best to unlock", round:"round"}
+  };
+
+  /* ======= Custom Modal System ======= */
+  function showConfirmModal(title, message, isDanger = false) {
+    return new Promise((resolve) => {
+      const overlay = document.getElementById('confirmOverlay');
+      const titleEl = document.getElementById('confirmTitle');
+      const messageEl = document.getElementById('confirmMessage');
+      const cancelBtn = document.getElementById('confirmCancel');
+      const okBtn = document.getElementById('confirmOk');
+      
+      // Set content
+      titleEl.textContent = title;
+      messageEl.textContent = message;
+      
+      // Update button text based on current language
+      const lang = state?.lang || 'en';
+      cancelBtn.textContent = I18N[lang].cancel;
+      okBtn.textContent = I18N[lang].confirm;
+      
+      // Apply danger styling if needed
+      okBtn.className = `confirm-btn ${isDanger ? 'danger' : 'confirm'}`;
+      
+      // Show modal
+      overlay.classList.add('show');
+      
+      // Handle button clicks
+      const handleCancel = () => {
+        cleanup();
+        resolve(false);
+      };
+      
+      const handleConfirm = () => {
+        cleanup();
+        resolve(true);
+      };
+      
+      const cleanup = () => {
+        overlay.classList.remove('show');
+        cancelBtn.removeEventListener('click', handleCancel);
+        okBtn.removeEventListener('click', handleConfirm);
+        overlay.removeEventListener('click', handleOverlayClick);
+      };
+      
+      const handleOverlayClick = (e) => {
+        if (e.target === overlay) {
+          handleCancel();
+        }
+      };
+      
+      // Add event listeners
+      cancelBtn.addEventListener('click', handleCancel);
+      okBtn.addEventListener('click', handleConfirm);
+      overlay.addEventListener('click', handleOverlayClick);
+    });
+  }
+
+  /* ======= State ======= */
+  const LS_KEY = 'candy_clicker_state_v1';
+  const defaultState = () => ({
+    lang: 'en',
+    bank: 0,
+    bestRound: 0,
+    totalEarned: 0,
+    cpcLevel: 0,      // +1 per level
+    autoLevel: 0,     // auto-clicker level
+    timeLevel: 0,     // +1s per level (expensive)
+    prestige: 0,      // +10% CPC per prestige
+    playerName: '',   // user's chosen name
+    selectedAvatar: '', // path to selected avatar
+    isFirstTime: true,  // flag for first-time setup
+  });
+  let state = { ...defaultState(), ...JSON.parse(localStorage.getItem(LS_KEY) || '{}') };
+
+  function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+
+  /* ======= Helpers ======= */
+  const $ = (sel, root=document)=>root.querySelector(sel);
+  const $$ = (sel, root=document)=>[...root.querySelectorAll(sel)];
+  const fmt = n => Math.floor(n).toLocaleString();
+  const priceCPC = lvl => Math.floor(50 * Math.pow(1.6, lvl));
+  const priceMult = lvl => Math.floor(200 * Math.pow(1.8, lvl));
+  const priceTime = lvl => Math.floor(500 * Math.pow(3, lvl)); // very expensive
+  const maxRoundTime = 60;
+  const baseRoundTime = 30; // default round time
+  const prestigeBonus = p => 1 + 0.10 * p; // +10% CPC per prestige
+  function cpc(){ return Math.max(1, (1 + state.cpcLevel) * prestigeBonus(state.prestige)); }
+
+  /* ======= UI Bindings ======= */
+  const bankText = $('#bankText');
+  const bankIcon = $('#bankIcon');
+  const timeLeftEl = $('#timeLeft');
+  const roundEarnedEl = $('#roundEarned');
+  const cpcVal = $('#cpcVal');
+  const clickBtn = $('#clickBtn');
+  const btnSprite = $('#btnSprite');
+  const startBtn = $('#startBtn');
+  const roundTimeHint = $('#roundTimeHint');
+  const results = $('#results');
+  const earnedThisRound = $('#earnedThisRound');
+  const bestScoreEl = $('#bestScore');
+  const toUpgrades = $('#toUpgrades');
+  const playAgain = $('#playAgain');
+  const ascendMsg = $('#ascendMsg');
+
+  const upgradesGrid = $('#upgradesGrid');
+  const timeIndicator = $('#timeIndicator');
+  const prestigeBtn = $('#prestigeBtn');
+  const prestigeHint = $('#prestigeHint');
+
+  const panels = {
+    game: $('#panel-game'),
+    upgrades: $('#panel-upgrades'),
+    leaders: $('#panel-leaders'),
+    settings: $('#panel-settings'),
+  };
+
+  const tabs = $$('#tab-game, #tab-upgrades, #tab-leaders, #tab-settings');
+  tabs.forEach(t=> t.addEventListener('click', ()=> switchTab(t.dataset.tab)));
+
+  function switchTab(id){
+    for(const key in panels){ panels[key].classList.remove('active'); }
+    $(`[data-tab="${id}"]`).classList.add('active');
+    tabs.forEach(t=> t.classList.toggle('active', t.dataset.tab===id));
+    const p = panels[id]; p.classList.add('active');
+  }
+
+  /* ======= Game Logic ======= */
+  let rafId=null, running=false, roundStart=0, roundDuration=baseRoundTime, lastTick=0, roundEarned=0, spriteIndex=1;
+  let autoClickerInterval = null;
+  function currentRoundTime(){ return Math.min(maxRoundTime, baseRoundTime + state.timeLevel); }
+
+  function resetRoundVisual(){
+    spriteIndex = 1; btnSprite.style.backgroundImage = `url(${CONFIG.buttonSpritePath(spriteIndex)})`;
+  }
+
+  function startRound(){
+    running = true; roundEarned = 0; roundDuration = currentRoundTime(); timeLeftEl.textContent = roundDuration;
+    resetRoundVisual();
+    clickBtn.disabled=false; results.classList.remove('show');
+    // Switch from start screen to game screen
+    $('#startScreen').style.display = 'none';
+    $('#gameScreen').style.display = 'flex';
+    roundStart = performance.now(); lastTick = roundStart;
+    roundTimeHint.textContent = `${roundDuration}s ${I18N[state.lang].round}`;
+    
+    // Start auto-clicker if available
+    if(state.autoLevel > 0) {
+      autoClickerInterval = setInterval(performAutoClick, 1000);
+    }
+    
+    loop();
+  }
+  function endRound(){
+    running=false; clickBtn.disabled=true;
+    
+    // Stop auto-clicker
+    if(autoClickerInterval) {
+      clearInterval(autoClickerInterval);
+      autoClickerInterval = null;
+    }
+    
+    state.bestRound = Math.max(state.bestRound, Math.floor(roundEarned));
+    earnedThisRound.textContent = fmt(roundEarned);
+    bestScoreEl.textContent = fmt(state.bestRound);
+    results.classList.add('show');
+    save();
+    // Animate ascent on leaderboard and auto-switch
+    setTimeout(()=>{
+      switchTab('leaders');
+      animateLeaderboardWithUpdate(Math.floor(roundEarned));
+    }, 1200);
+  }
+  function loop(now){
+    rafId = requestAnimationFrame(loop);
+    if(!running) return;
+    now = now || performance.now();
+    const elapsed = (now - roundStart) / 1000;
+    const left = Math.max(0, roundDuration - elapsed);
+    // update every frame
+    timeLeftEl.textContent = left.toFixed(1).replace(/\.0$/, '');
+    if(left<=0){ cancelAnimationFrame(rafId); endRound(); }
+  }
+
+  function spawnFloat(x,y, amount){
+    const el = document.createElement('div');
+    el.className='float'; el.textContent = `+${Math.floor(amount)}`;
+    el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.animation = 'floatUp 900ms ease forwards';
+    panels.game.appendChild(el);
+    setTimeout(()=> el.remove(), 950);
+  }
+
+  function spawnFallingButton(){
+    if(!running) return;
+    const el = document.createElement('div');
+    el.className = 'falling-button';
+    el.style.backgroundImage = `url(${CONFIG.buttonSpritePath(spriteIndex)})`;
+    el.style.left = Math.random() * (window.innerWidth - 40) + 'px';
+    el.style.top = '-50px';
+    document.body.appendChild(el);
+    setTimeout(()=> el.remove(), 3000);
+  }
+
+  function updateBankUI(){ bankText.textContent = fmt(state.bank); }
+
+  function performAutoClick(){
+    if(!running) return;
+    const val = cpc() * state.autoLevel; // Each auto-clicker level adds 1 click per second
+    roundEarned += val; state.bank += val; state.totalEarned += val; save();
+    roundEarnedEl.textContent = fmt(roundEarned); updateBankUI();
+    
+    // Visual effect for auto-click
+    const rect = clickBtn.getBoundingClientRect();
+    const cx = rect.left + rect.width/2; const cy = rect.top + rect.height/2;
+    spawnFloat(cx + (Math.random() - 0.5) * 40, cy - 30, val);
+    
+    // Sprite swap check
+    const crossed = thresholdsCrossed(roundEarned);
+    const targetIndex = Math.min(1 + crossed, CONFIG.buttonSpriteMaxN);
+    if(targetIndex !== spriteIndex){ spriteIndex = targetIndex; btnSprite.style.backgroundImage = `url(${CONFIG.buttonSpritePath(spriteIndex)})`; }
+    
+    // Spawn falling button occasionally for auto-clicks too (10% chance)
+    if(Math.random() < 0.1) {
+      spawnFallingButton();
+    }
+  }
+
+  function thresholdsCrossed(total){
+    let n = 0; for(const th of CONFIG.thresholds){ if(total >= th) n++; }
+    return n;
+  }
+
+  clickBtn.addEventListener('click', (e)=>{
+    if(!running) return;
+    const val = cpc();
+    roundEarned += val; state.bank += val; state.totalEarned += val; save();
+    roundEarnedEl.textContent = fmt(roundEarned); updateBankUI(); 
+    // float
+    const rect = clickBtn.getBoundingClientRect();
+    const cx = rect.left + rect.width/2; const cy = rect.top + rect.height/2; // center
+    spawnFloat(cx, cy-10, val);
+    // press effect
+    clickBtn.classList.add('pressed'); setTimeout(()=> clickBtn.classList.remove('pressed'), 80);
+    // sprite swap
+    const crossed = thresholdsCrossed(roundEarned);
+    const targetIndex = Math.min(1 + crossed, CONFIG.buttonSpriteMaxN);
+    if(targetIndex !== spriteIndex){ spriteIndex = targetIndex; btnSprite.style.backgroundImage = `url(${CONFIG.buttonSpritePath(spriteIndex)})`; }
+    
+    // Spawn falling button occasionally (20% chance)
+    if(Math.random() < 0.2) {
+      spawnFallingButton();
+    }
+  });
+
+  $('#megaStartBtn').addEventListener('click', startRound);
+  $('#playAgain').addEventListener('click', ()=> {
+    // Return to start screen after round
+    $('#gameScreen').style.display = 'none';
+    $('#startScreen').style.display = 'flex';
+    results.classList.remove('show');
+  });
+  $('#toUpgrades').addEventListener('click', ()=> switchTab('upgrades'));
+
+  /* ======= Upgrades ======= */
+  const UPGRADE_DEFS = [
+    { id:'cpc', icon:'assets/icons/plus.svg', title:()=>`+1 ${I18N[state.lang].click}`, desc:()=>`Increase currency per click`, price:()=>priceCPC(state.cpcLevel), can:()=>state.bank>=priceCPC(state.cpcLevel), buy:()=>{ const p=priceCPC(state.cpcLevel); if(state.bank<p) return; state.bank-=p; state.cpcLevel++; save(); } },
+    { id:'auto', icon:'assets/icons/bolt.svg', title:()=>I18N[state.lang].autoClicker, desc:()=>I18N[state.lang].autoClickerDesc, price:()=>priceMult(state.autoLevel), can:()=>state.bank>=priceMult(state.autoLevel), buy:()=>{ const p=priceMult(state.autoLevel); if(state.bank<p) return; state.bank-=p; state.autoLevel++; save(); } },
+    { id:'time', icon:'assets/icons/clock.svg', title:()=>I18N[state.lang].addSecond, desc:()=>`Very expensive`, price:()=> state.timeLevel + baseRoundTime < maxRoundTime ? priceTime(state.timeLevel) : Infinity, can:()=>{ const c=priceTime(state.timeLevel); return (state.bank>=c) && (baseRoundTime + state.timeLevel < maxRoundTime); }, buy:()=>{
+      const price = priceTime(state.timeLevel); if(state.bank<price) return; if(baseRoundTime + state.timeLevel >= maxRoundTime) return; state.bank -= price; state.timeLevel++; save();}
+    },
+  ];
+
+  function renderUpgrades(){
+    upgradesGrid.innerHTML='';
+    for(const u of UPGRADE_DEFS){
+      const price = u.price();
+      const can = u.can();
+      const card = document.createElement('div'); card.className = 'upgrade' + (can? '' : ' disabled');
+      card.innerHTML = `
+        <div class="icon" style="background-image:url('${u.icon}')"></div>
+        <div class="meta">
+          <h4>${u.title()}</h4>
+          <div class="desc">${u.desc()}</div>
+          <div class="price">${Number.isFinite(price)? fmt(price): 'MAX'}</div>
+        </div>
+        <button class="btn buy" ${can? '' : 'disabled'} data-id="${u.id}">Buy</button>
+      `;
+      upgradesGrid.appendChild(card);
+    }
+    if(timeIndicator) timeIndicator.textContent = `${I18N[state.lang].roundTime}: ${currentRoundTime()}s`;
+    updateBankUI(); 
+    if(cpcVal) cpcVal.textContent = Math.floor(cpc()); 
+  }
+  upgradesGrid.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.buy'); if(!btn) return;
+    const id = btn.dataset.id; const def = UPGRADE_DEFS.find(d=>d.id===id); if(!def) return;
+    def.buy(); renderUpgrades();
+  });
+
+  /* ======= First-time Setup ======= */
+  const setupOverlay = $('#setupOverlay');
+  const playerNameInput = $('#playerName');
+  const avatarGrid = $('#avatarGrid');
+  const startGameBtn = $('#startGameBtn');
+  const userProfile = $('#userProfile');
+  const userAvatar = $('#userAvatar');
+  const userName = $('#userName');
+
+  let selectedAvatarPath = '';
+
+  function showFirstTimeSetup(){
+    setupOverlay.style.display = 'flex';
+    renderAvatarGrid();
+  }
+
+  function renderAvatarGrid(){
+    avatarGrid.innerHTML = '';
+    CONFIG.avatars.forEach((avatarPath, index) => {
+      const option = document.createElement('div');
+      option.className = 'avatar-option';
+      option.innerHTML = `<img src="${avatarPath}" alt="Avatar ${index + 1}">`;
+      option.addEventListener('click', () => selectAvatar(avatarPath, option));
+      avatarGrid.appendChild(option);
+    });
+  }
+
+  function selectAvatar(avatarPath, element){
+    selectedAvatarPath = avatarPath;
+    $$('.avatar-option').forEach(opt => opt.classList.remove('selected'));
+    element.classList.add('selected');
+    checkSetupComplete();
+  }
+
+  function checkSetupComplete(){
+    const nameValid = playerNameInput.value.trim().length > 0;
+    const avatarSelected = selectedAvatarPath !== '';
+    startGameBtn.disabled = !(nameValid && avatarSelected);
+  }
+
+  function completeSetup(){
+    const name = playerNameInput.value.trim();
+    if(!name || !selectedAvatarPath) return;
+    
+    state.playerName = name;
+    state.selectedAvatar = selectedAvatarPath;
+    state.isFirstTime = false;
+    save();
+    
+    setupOverlay.style.display = 'none';
+    updateUserProfile();
+  }
+
+  function updateUserProfile(){
+    if(state.playerName && state.selectedAvatar){
+      userName.textContent = state.playerName;
+      userAvatar.src = state.selectedAvatar;
+      userProfile.style.display = 'flex';
+    }
+  }
+
+  playerNameInput.addEventListener('input', checkSetupComplete);
+  startGameBtn.addEventListener('click', completeSetup);
+
+  /* ======= Leaderboard ======= */
+  let players = [];
+  function initPlayers(){
+    players = [...LEADERS.map(x=>({...x}))];
+    console.log('Initialized players:', players);
+  }
+  function ensureMe(){
+    // Only add user if they have a custom name (not default "You")
+    if(state.playerName && state.playerName.trim() !== '') {
+      const myName = state.playerName;
+      const myAvatar = state.selectedAvatar || 'assets/avatars/avatar1.svg';
+      // Remove any existing entry for this user first
+      players = players.filter(p => p.name !== myName);
+      // Add current user with updated score
+      players.push({name: myName, score: state.bestRound||0, avatar: myAvatar});
+    }
+  }
+  function sortPlayers(){ players.sort((a,b)=> b.score - a.score); }
+
+  const lbTable = $('#lbTable tbody');
+  function renderLB(){
+    ensureMe(); sortPlayers();
+    lbTable.innerHTML = '';
+    console.log('Rendering leaderboard with players:', players);
+    players.forEach(p=>{
+      const myName = state.playerName || 'You';
+      const tr = document.createElement('tr'); tr.dataset.name = p.name; if(p.name===myName) tr.classList.add('me');
+      tr.innerHTML = `
+        <td><img class="avatar" src="${p.avatar}" alt=""/></td>
+        <td>${p.name}</td>
+        <td style="text-align:right; font-weight:800">${fmt(p.score)}</td>
+      `;
+      lbTable.appendChild(tr);
+    });
+  }
+
+  function getRowTops(){
+    const tops = new Map();
+    $$('#lbTable tbody tr').forEach(tr=>{ tops.set(tr.dataset.name, tr.getBoundingClientRect().top); });
+    return tops;
+  }
+  function animateLeaderboardWithUpdate(newRoundScore){
+    // FLIP: capture first
+    ensureMe();
+    const before = getRowTops();
+    // update my score and resort
+    const myName = state.playerName || 'You';
+    const me = players.find(p=>p.name===myName); if(me) me.score = Math.max(me.score, state.bestRound);
+    sortPlayers();
+    // re-render
+    renderLB();
+    // capture last
+    const after = getRowTops();
+    // apply transforms from before->after
+    $$('#lbTable tbody tr').forEach(tr=>{
+      const name = tr.dataset.name;
+      const dy = (before.get(name) ?? after.get(name)) - after.get(name);
+      if(Math.abs(dy)>1){
+        tr.style.transform = `translateY(${dy}px)`;
+        tr.getBoundingClientRect(); // force reflow
+        tr.style.transform = 'translateY(0)';
+      }
+      if(name===myName){ tr.classList.add('ascend'); setTimeout(()=>tr.classList.remove('ascend'), 1200); }
+    });
+  }
+
+  /* ======= Settings / i18n / Prestige ======= */
+  function applyI18N(){
+    $('[data-i18n="time"]').textContent = I18N[state.lang].time;
+    $('[data-i18n="earned"]').textContent = I18N[state.lang].earned;
+    $$('#tab-game span, #startBtn span, #playAgain span').forEach(el=> el.textContent = I18N[state.lang].start);
+    $$('#tab-upgrades span, #toUpgrades span').forEach(el=> el.textContent = I18N[state.lang].upgrades);
+    $$('#tab-leaders span').forEach(el=> el.textContent = I18N[state.lang].leaders);
+    $$('#tab-settings span').forEach(el=> el.textContent = I18N[state.lang].settings);
+    prestigeBtn.innerHTML = `<div class="btn-content"><span class="btn-title">⭐ ${I18N[state.lang].prestige}</span><span class="btn-subtitle">+10% ${I18N[state.lang].click}</span></div>`;
+    // Setup modal i18n
+    $('[data-i18n="welcome"]').textContent = I18N[state.lang].welcome;
+    $('[data-i18n="enterName"]').textContent = I18N[state.lang].enterName;
+    $('[data-i18n="chooseAvatar"]').textContent = I18N[state.lang].chooseAvatar;
+    $('[data-i18n="startGame"]').textContent = I18N[state.lang].startGame;
+    // Settings i18n
+    $('[data-i18n="language"]').textContent = I18N[state.lang].language;
+    $('[data-i18n="dangerZone"]').textContent = I18N[state.lang].dangerZone;
+    $('[data-i18n="resetData"]').textContent = I18N[state.lang].resetData;
+    $('[data-i18n="resetWarning"]').textContent = I18N[state.lang].resetWarning;
+    $('[data-i18n="resetKeeps"]').textContent = I18N[state.lang].resetKeeps;
+    const addSecDef = UPGRADE_DEFS.find(u=>u.id==='time'); if(addSecDef) renderUpgrades();
+  }
+  function setLang(lang){ state.lang = lang; save(); applyI18N(); $('#lang-en').classList.toggle('active', lang==='en'); $('#lang-ru').classList.toggle('active', lang==='ru'); }
+  $('#lang-en').addEventListener('click', ()=> setLang('en'));
+  $('#lang-ru').addEventListener('click', ()=> setLang('ru'));
+
+  function updatePrestigeUI(){
+    const unlocked = state.bestRound >= 5000 || state.totalEarned >= 20000;
+    prestigeBtn.disabled = !unlocked;
+    prestigeHint.textContent = unlocked ? `${I18N[state.lang].prestigeReady} (+${Math.floor(100*(prestigeBonus(state.prestige+1)-1))}% next)` : I18N[state.lang].prestigeUnlock;
+  }
+  async function doPrestige(){
+    if(prestigeBtn.disabled) return;
+    const keep = `Keep: best score (${fmt(state.bestRound)}), language, prestige bonus (+${Math.floor(100*(prestigeBonus(state.prestige)-1))}%).`;
+    const reset = `Reset: bank, upgrades, round time levels.`;
+    const message = `${keep}\n${reset}\n\nYou'll gain +10% ${I18N[state.lang].click} permanently.`;
+    
+    const confirmed = await showConfirmModal(I18N[state.lang].prestige + '?', message);
+    if(!confirmed) return;
+    
+    state.prestige += 1; state.bank = 0; state.cpcLevel = 0; state.autoLevel = 0; state.timeLevel = 0; state.bestRound = 0; save();
+    updateBankUI(); renderUpgrades(); updatePrestigeUI(); renderLB(); 
+  }
+  prestigeBtn.addEventListener('click', doPrestige);
+
+  $('#resetBtn').addEventListener('click', async ()=>{
+    const message = I18N[state.lang].resetWarning + '\n\n' + I18N[state.lang].resetKeeps;
+    const confirmed = await showConfirmModal(I18N[state.lang].resetData + '?', message, true);
+    if(!confirmed) return;
+    
+    const keep = { lang: state.lang };
+    state = { ...defaultState(), ...keep };
+    save();
+    // Reinitialize players from JSON to remove previous user
+    initPlayers();
+    updateBankUI(); renderUpgrades(); renderLB(); updatePrestigeUI(); applyI18N();
+  });
+
+  /* ======= Bootstrap ======= */
+  async function boot(){
+    try {
+      console.log('Boot function started');
+      document.title = CONFIG.gameTitle;
+      console.log('Setting bank icon...');
+      $('#bankIcon').src = CONFIG.currency.iconPath;
+      console.log('Updating bank UI...');
+      updateBankUI();
+      console.log('Setting language...');
+      setLang(state.lang);
+      console.log('Rendering upgrades...');
+      renderUpgrades();
+      
+      console.log('About to load leaders...');
+      // Load leaders data first
+      await loadLeaders();
+      console.log('Leaders loaded, initializing players...');
+      initPlayers();
+      console.log('Players initialized, rendering leaderboard...');
+      renderLB();
+      
+      console.log('Updating prestige UI...');
+      updatePrestigeUI();
+      console.log('Setting up click button...');
+      clickBtn.disabled = true; // require Start
+      roundTimeHint.textContent = `${currentRoundTime()}s ${I18N[state.lang].round}`;
+      
+      console.log('Setting up screens...');
+      // Ensure we start with the start screen visible
+      $('#startScreen').style.display = 'flex';
+      $('#gameScreen').style.display = 'none';
+      
+      console.log('Checking first time user...');
+      // Check if first time user
+      if(state.isFirstTime) {
+        showFirstTimeSetup();
+      } else {
+        updateUserProfile();
+      }
+      console.log('Boot function completed');
+    } catch (error) {
+      console.error('Error in boot function:', error);
+    }
+  }
+  // Add error handling and logging
+  window.addEventListener('error', function(e) {
+    console.error('JavaScript error:', e.error);
+  });
+  
+  console.log('Starting game initialization...');
+  boot();
+</script>
+</body>
+</html>
